@@ -1,11 +1,11 @@
 import { pgTable, text, uuid } from "drizzle-orm/pg-core";
 import { timestamps } from "./columns.helpers";
 
-export const language = pgTable("language", {
+export const person = pgTable("person", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
-  iso: text("iso").notNull().unique(),
-  logo: text("logo").notNull(),
+  lastname: text("lastname").notNull(),
+  avatar: text("avatar"),
 
   ...timestamps,
 });

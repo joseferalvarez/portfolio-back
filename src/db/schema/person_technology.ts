@@ -1,13 +1,13 @@
 import { pgTable, uuid } from "drizzle-orm/pg-core";
 import { timestamps } from "./columns.helpers";
+import { person } from "./person";
 import { technology } from "./technology";
-import { repository } from "./repository";
 
-export const repositoryTechnology = pgTable("repository_technology", {
+export const personTechnology = pgTable("person_technology", {
   id: uuid("id").defaultRandom().primaryKey(),
 
-  repository: uuid("repository")
-    .references(() => repository.id)
+  person: uuid("person")
+    .references(() => person.id)
     .notNull(),
   technology: uuid("technology")
     .references(() => technology.id)

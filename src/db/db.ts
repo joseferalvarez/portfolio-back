@@ -12,6 +12,10 @@ export class Database {
     }
   }
 
+  async query(action: Function) {
+    await action(this.db);
+  }
+
   static getInstance(): Database {
     if (!Database.instance) Database.instance = new Database();
     return Database.instance;

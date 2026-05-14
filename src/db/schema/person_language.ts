@@ -3,12 +3,9 @@ import { timestamps } from "./columns.helpers";
 import { language } from "./language";
 import { person } from "./person";
 
-export const profile = pgTable("profile", {
+export const personLanguage = pgTable("person_language", {
   id: uuid("id").defaultRandom().primaryKey(),
-  position: text("position").notNull(),
-  bio: text("bio"),
-  description: text("description"),
-  curriculum: text("curriculum"),
+  level: text("level").notNull(),
 
   person: uuid("person")
     .references(() => person.id)
