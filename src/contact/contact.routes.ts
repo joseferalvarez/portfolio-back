@@ -12,7 +12,9 @@ apiContact.post("", async (c) => {
   if (!validResult.success) return c.json(validResult.error, 400);
 
   const result = await controller.createContact(validResult.data);
-  return c.status(result ? 201 : 400);
+
+  if (!result) return c.json({ message: "Error creating contact" }, 400);
+  return c.json({ message: "Contact created succesfully" }, 201);
 });
 
 export default apiContact;
