@@ -32,4 +32,10 @@ apiProfile.get("/section/experience/:lang/:id", async (c) => {
   return c.json(result);
 });
 
+apiProfile.get("/section/technologies/:id", async (c) => {
+  const id = c.req.param("id");
+  const result = await controller.getTechnologies(id);
+  return c.json(result);
+});
+
 export default apiProfile;

@@ -1,4 +1,4 @@
-import { pgTable, uuid } from "drizzle-orm/pg-core";
+import { numeric, pgTable, uuid } from "drizzle-orm/pg-core";
 import { timestamps } from "./columns.helpers";
 import { person } from "./person";
 import { technology } from "./technology";
@@ -12,6 +12,8 @@ export const personTechnology = pgTable("person_technology", {
   technology: uuid("technology")
     .references(() => technology.id)
     .notNull(),
+
+  experience: numeric("experience").notNull().default("1"),
 
   ...timestamps,
 });

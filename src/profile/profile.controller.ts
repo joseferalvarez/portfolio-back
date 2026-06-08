@@ -1,11 +1,15 @@
 import { person } from "../db/schema/person";
 import { Database } from "../db/db";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { socialAccount } from "../db/schema/social-account";
 import { socialMedia } from "../db/schema/social-media";
 import { profile } from "../db/schema/profile";
 import { language } from "../db/schema/language";
 import { project } from "../db/schema/project";
+import { experience } from "../db/schema/experience";
+import { company } from "../db/schema/company";
+import { personTechnology } from "../db/schema/person_technology";
+import { technology } from "../db/schema/technology";
 
 const database = Database.getInstance();
 
@@ -38,7 +42,8 @@ export class ProfileController {
       .select()
       .from(socialAccount)
       .leftJoin(socialMedia, eq(socialMedia.id, socialAccount.social_media))
-      .where(eq(socialAccount.person, id));
+      .where(eq(socialAccount.person, id))
+      .where(eq(socialAccount.in_card, true));
 
     return {
       name: profileData.person.name,
@@ -65,9 +70,23 @@ export class ProfileController {
       .where(eq(profile.person, id))
       .where(eq(profile.language, languageId[0].id));
 
+    const socialAccounts = await database.db
+      .select()
+      .from(socialAccount)
+      .leftJoin(socialMedia, eq(socialMedia.id, socialAccount.social_media))
+      .where(eq(socialAccount.person, id))
+      .where(eq(socialAccount.in_card, false));
+
     return {
       position: profileData[0].position,
       description: profileData[0].description,
+      social_accounts: socialAccounts.map((account: any) => {
+        return {
+          name: account.social_media.name,
+          url: account.social_account.url,
+          icon: account.social_media.logo,
+        };
+      })
     };
   }
 
@@ -93,12 +112,51 @@ export class ProfileController {
   async getExperience(id: string, lang: string) {
     const languageId = await this.getLanguageId(lang);
 
-    const experience = await database.db
+    const exps = await database.db
       .select()
-      .from(profile)
-      .where(eq(profile.person, id))
-      .where(eq(profile.language, languageId[0].id));
+      .from(experience)
+      .leftJoin(company, eq(experience.company, company.id))
+      .where(eq(experience.person, id))
+      .where(eq(experience.language, languageId[0].id))
+      .orderBy(desc(experience.init_date));
 
-    return experience;
+    if (!exps) throw new Error("Experience not found");
+
+    const formattedExps = exps.map((exp: any) => {
+      return {
+        position: exp.experience.position,
+        description: exp.experience.description,
+        achievements: exp.experience.achievements,
+        init_date: exp.experience.init_date,
+        end_date: exp.experience.end_date ? exp.experience.end_date : null,
+        company: {
+          name: exp.company.name,
+          webpage: exp.company.webpage,
+          logo: exp.company.logo,
+        }
+      }
+    });
+
+    return formattedExps;
+  }
+
+  async getTechnologies(id: string) {
+
+    const technologies = await database.db
+      .select()
+      .from(personTechnology)
+      .leftJoin(technology, eq(personTechnology.technology, technology.id))
+      .where(eq(personTechnology.person, id));
+
+    return technologies.map((tech: any) => {
+      return {
+        name: tech.technology.name,
+        logo: tech.technology.logo,
+        type: tech.technology.type,
+        webpage: tech.technology.webpage,
+        badge: tech.technology.badge,
+        experience: tech.person_technology.experience
+      };
+    });
   }
 }
