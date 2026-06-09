@@ -38,4 +38,11 @@ apiProfile.get("/section/technologies/:id", async (c) => {
   return c.json(result);
 });
 
+apiProfile.get("/section/education/:lang/:id", async (c) => {
+  const lang = c.req.param("lang");
+  const id = c.req.param("id");
+  const result = await controller.getEducation(id, lang);
+  return c.json(result);
+})
+
 export default apiProfile;

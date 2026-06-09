@@ -10,6 +10,7 @@ import { experience } from "../db/schema/experience";
 import { company } from "../db/schema/company";
 import { personTechnology } from "../db/schema/person_technology";
 import { technology } from "../db/schema/technology";
+import { education } from "../db/schema/education";
 
 const database = Database.getInstance();
 
@@ -146,17 +147,65 @@ export class ProfileController {
       .select()
       .from(personTechnology)
       .leftJoin(technology, eq(personTechnology.technology, technology.id))
-      .where(eq(personTechnology.person, id));
+      .where(eq(personTechnology.person, id))
+      .orderBy(
+        desc(technology.name),
+        desc(personTechnology.experience),
+        desc(personTechnology.starred)
+      );
+
+    const getExperience = (expNumber: string) => {
+      switch (Number(expNumber)) {
+        case 1:
+          return "Beginner";
+        case 2:
+          return "Intermediate";
+        case 3:
+          return "Advanced";
+        case 4:
+          return "Expert";
+        default:
+          return "Beginner";
+      }
+    }
 
     return technologies.map((tech: any) => {
+
       return {
         name: tech.technology.name,
         logo: tech.technology.logo,
         type: tech.technology.type,
         webpage: tech.technology.webpage,
         badge: tech.technology.badge,
-        experience: tech.person_technology.experience
+        experience: getExperience(tech.person_technology.experience),
+        starred: tech.person_technology.starred
       };
     });
+  }
+
+  async getEducation(id: string, lang: string) {
+    const languageId = await this.getLanguageId(lang);
+
+    const educations = await database.db
+      .select()
+      .from(education)
+      .leftJoin(company, eq(education.company, company.id))
+      .where(eq(education.person, id))
+      .where(eq(education.language, languageId[0].id))
+      .orderBy(desc(education.init_date));
+
+    return educations.map((edu: any) => {
+      return {
+        name: edu.education.name,
+        description: edu.education.description,
+        init_date: edu.education.init_date,
+        end_date: edu.education.end_date ? edu.education.end_date : null,
+        company: {
+          name: edu.company.name,
+          webpage: edu.company.webpage,
+          logo: edu.company.logo,
+        }
+      }
+    })
   }
 }
