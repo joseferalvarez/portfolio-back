@@ -1,6 +1,6 @@
 import { person } from "../db/schema/person";
 import { Database } from "../db/db";
-import { desc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { socialAccount } from "../db/schema/social-account";
 import { socialMedia } from "../db/schema/social-media";
 import { profile } from "../db/schema/profile";
@@ -149,7 +149,7 @@ export class ProfileController {
       .leftJoin(technology, eq(personTechnology.technology, technology.id))
       .where(eq(personTechnology.person, id))
       .orderBy(
-        desc(technology.name),
+        asc(technology.name),
         desc(personTechnology.experience),
         desc(personTechnology.starred)
       );
