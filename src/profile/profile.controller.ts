@@ -1,6 +1,6 @@
 import { person } from "../db/schema/person";
 import { Database } from "../db/db";
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { socialAccount } from "../db/schema/social-account";
 import { socialMedia } from "../db/schema/social-media";
 import { profile } from "../db/schema/profile";
@@ -11,6 +11,7 @@ import { company } from "../db/schema/company";
 import { personTechnology } from "../db/schema/person_technology";
 import { technology } from "../db/schema/technology";
 import { education } from "../db/schema/education";
+import { experienceTechnology } from "../db/schema/experience_technology";
 
 const database = Database.getInstance();
 
@@ -114,27 +115,57 @@ export class ProfileController {
     const languageId = await this.getLanguageId(lang);
 
     const exps = await database.db
-      .select()
+      .select({
+        position: experience.position,
+        description: experience.description,
+        achievements: experience.achievements,
+        init_date: experience.init_date,
+        end_date: experience.end_date,
+        company: company,
+        technologies: sql`
+          json_agg(
+            json_build_object(
+              'name', ${technology.name}
+            )
+          )
+          `.as("technologies"),
+      })
       .from(experience)
-      .leftJoin(company, eq(experience.company, company.id))
-      .where(eq(experience.person, id))
-      .where(eq(experience.language, languageId[0].id))
+      .innerJoin(company, eq(experience.company, company.id))
+      .leftJoin(
+        experienceTechnology,
+        eq(experience.id, experienceTechnology.experience)
+      )
+      .leftJoin(
+        technology,
+        eq(experienceTechnology.technology, technology.id)
+      )
+      .where(
+        and(
+          eq(experience.person, id),
+          eq(experience.language, languageId[0].id)
+        )
+      )
+      .groupBy(experience.id, company.id)
       .orderBy(desc(experience.init_date));
 
     if (!exps) throw new Error("Experience not found");
 
     const formattedExps = exps.map((exp: any) => {
       return {
-        position: exp.experience.position,
-        description: exp.experience.description,
-        achievements: exp.experience.achievements,
-        init_date: exp.experience.init_date,
-        end_date: exp.experience.end_date ? exp.experience.end_date : null,
+        position: exp.position,
+        description: exp.description,
+        achievements: exp.achievements,
+        init_date: exp.init_date,
+        end_date: exp.end_date ? exp.end_date : null,
         company: {
           name: exp.company.name,
           webpage: exp.company.webpage,
           logo: exp.company.logo,
-        }
+        },
+        technologies: exp.technologies.map((tech: { name: string }) => {
+          return tech.name
+        }).filter((tech: string) => tech) || [],
       }
     });
 

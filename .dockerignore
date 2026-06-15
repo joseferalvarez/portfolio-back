@@ -1,0 +1,6 @@
+drizzle
+node_modules
+.gitignore
+README.md
+deploy.sh
+docker-compose-local.yml
